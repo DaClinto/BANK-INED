@@ -5,10 +5,10 @@ import { plaidClient } from '@/lib/plaid-client';
 export async function POST(request: NextRequest) {
   try {
     const { user } = await request.json();
-    
+
     console.log('Plaid Config:', PLAID_CONFIG);
     console.log('User data:', user);
-    
+
     // Test basic Plaid connection first
     try {
       const institutionsResponse = await plaidClient.institutionsGet({
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
       console.log('Plaid connection test: SUCCESS');
     } catch (testError) {
       console.error('Plaid connection test FAILED:', testError);
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Plaid connection failed',
-        details: testError.message,
+        details: testError instanceof Error ? testError.message : String(testError),
         config: {
           env: PLAID_CONFIG.env,
           clientId: process.env.PLAID_CLIENT_ID?.substring(0, 8) + '...',
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         }
       }, { status: 500 });
     }
-    
+
     // Now try to create link token
     const response = await plaidClient.linkTokenCreate({
       user: {
@@ -43,13 +43,13 @@ export async function POST(request: NextRequest) {
     });
 
     console.log('Link token created successfully');
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      link_token: response.data.link_token 
+      link_token: response.data.link_token
     });
   } catch (error: any) {
     console.error('Debug - Full error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to create link token',
       details: error.message,
       stack: error.stack,
