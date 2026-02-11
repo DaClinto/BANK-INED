@@ -24,7 +24,7 @@ import {
 import { Account, Transaction } from '@/types';
 
 const transactionSchema = z.object({
-  amount: z.string().transform((val) => parseFloat(val)),
+  amount: z.coerce.number().min(0.01, 'Amount must be greater than 0'),
   description: z.string().min(2, 'Description must be at least 2 characters'),
   category: z.string().min(2, 'Category must be at least 2 characters'),
   type: z.enum(['debit', 'credit']),
@@ -189,7 +189,7 @@ const accountSchema = z.object({
   name: z.string().min(2, 'Account name must be at least 2 characters'),
   bankName: z.string().min(2, 'Bank name must be at least 2 characters'),
   type: z.enum(['checking', 'savings', 'credit', 'investment']),
-  balance: z.string().transform((val) => parseFloat(val)),
+  balance: z.coerce.number(),
   currency: z.string().default('USD'),
   lastFour: z.string().length(4, 'Last 4 digits required'),
 });
