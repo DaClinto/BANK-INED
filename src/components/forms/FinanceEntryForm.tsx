@@ -24,13 +24,16 @@ import {
 import { Account, Transaction } from '@/types';
 
 const transactionSchema = z.object({
-  amount: z.coerce.number().min(0.01, 'Amount must be greater than 0'),
+  amount: z.number().min(0.01, 'Amount must be greater than 0'),
   description: z.string().min(2, 'Description must be at least 2 characters'),
   category: z.string().min(2, 'Category must be at least 2 characters'),
   type: z.enum(['debit', 'credit']),
   accountId: z.string().min(1, 'Please select an account'),
   date: z.string().min(1, 'Please select a date'),
+  currency: z.string().min(1, 'Currency is required'),
 });
+
+type TransactionValues = z.infer<typeof transactionSchema>;
 
 interface ManualTransactionFormProps {
   accounts: Account[];
@@ -43,7 +46,7 @@ export const ManualTransactionForm: React.FC<ManualTransactionFormProps> = ({
   onAddTransaction,
   onClose,
 }) => {
-  const form = useForm<z.infer<typeof transactionSchema>>({
+  const form = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       amount: 0,
@@ -52,6 +55,7 @@ export const ManualTransactionForm: React.FC<ManualTransactionFormProps> = ({
       type: 'debit',
       accountId: accounts[0]?.id || '',
       date: new Date().toISOString().split('T')[0],
+      currency: 'USD',
     },
   });
 
@@ -74,7 +78,14 @@ export const ManualTransactionForm: React.FC<ManualTransactionFormProps> = ({
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} className="bg-white/5 border-white/10" />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      className="bg-white/5 border-white/10"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -189,10 +200,12 @@ const accountSchema = z.object({
   name: z.string().min(2, 'Account name must be at least 2 characters'),
   bankName: z.string().min(2, 'Bank name must be at least 2 characters'),
   type: z.enum(['checking', 'savings', 'credit', 'investment']),
-  balance: z.coerce.number(),
-  currency: z.string().default('USD'),
+  balance: z.number(),
+  currency: z.string().min(1, 'Currency is required'),
   lastFour: z.string().length(4, 'Last 4 digits required'),
 });
+
+type AccountValues = z.infer<typeof accountSchema>;
 
 interface AddAccountFormProps {
   onAddAccount: (account: Omit<Account, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'isActive'>) => void;
@@ -203,7 +216,7 @@ export const AddAccountForm: React.FC<AddAccountFormProps> = ({
   onAddAccount,
   onClose,
 }) => {
-  const form = useForm<z.infer<typeof accountSchema>>({
+  const form = useForm<AccountValues>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: '',
@@ -300,7 +313,14 @@ export const AddAccountForm: React.FC<AddAccountFormProps> = ({
                 <FormItem>
                   <FormLabel>Initial Balance</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} className="bg-white/5 border-white/10 text-white" />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      className="bg-white/5 border-white/10 text-white"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
